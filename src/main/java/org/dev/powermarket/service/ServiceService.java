@@ -9,6 +9,8 @@ import org.dev.powermarket.repository.ServiceAvailabilityRepository;
 import org.dev.powermarket.repository.ServiceRepository;
 import org.dev.powermarket.integration.search.MlSearchClient;
 import org.dev.powermarket.integration.search.MlSearchProperties;
+
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.time.LocalDate;
@@ -57,9 +59,8 @@ public class ServiceService {
         service.setCategory(request.getCategory());
         service.setPricePerDay(request.getPricePerDay());
         service.setLocation(request.getLocation());
-        service.setCapacity(request.getCapacity());
+        service.setMaxCapacity(BigDecimal.valueOf(request.getCapacity()));
         service.setTechnicalSpecs(request.getTechnicalSpecs());
-        service.setAvailableCapacity(request.getCapacity());
         service.setSupplier(supplier);
         service.setIsActive(true);
 

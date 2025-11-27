@@ -76,7 +76,7 @@ public class RentalRequestService {
         rentalRequest.setEndDate(request.getEndDate());
         rentalRequest.setTotalPrice(totalPrice);
         rentalRequest.setMessage("");
-        rentalRequest.setCapacityNeeded(request.getCapacityNeeded());
+        rentalRequest.setCapacityNeeded(BigDecimal.valueOf(request.getCapacityNeeded()));
         rentalRequest.setStatus(RentalRequestStatus.PENDING);
 
         RentalRequest saved = rentalRequestRepository.save(rentalRequest);
@@ -259,7 +259,7 @@ public class RentalRequestService {
         dto.setRejectionReason(request.getRejectionReason());
         dto.setCreatedAt(request.getCreatedAt());
         dto.setRespondedAt(request.getRespondedAt());
-        dto.setCapacityNeeded(request.getCapacityNeeded());
+        dto.setCapacityNeeded(request.getCapacityNeeded().doubleValue());
         return dto;
     }
 }

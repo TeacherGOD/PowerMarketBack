@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -117,18 +115,23 @@ public class CapacityManagementService {
     public void releaseCapacity(Rental rental) {
         List<CapacityReservation> reservations = reservationRepository.findByRental(rental);
 
+        Set<ServiceAvailabilityPeriod> updatedPeriods = new HashSet<>();
+
         for (CapacityReservation reservation : reservations) {
             ServiceAvailabilityPeriod period = reservation.getAvailabilityPeriod();
+
             // Вернуть мощность
             period.setAvailableCapacity(period.getAvailableCapacity().add(reservation.getReservedCapacity()));
-            periodRepository.save(period);
+            ServiceAvailabilityPeriod savedPeriod = periodRepository.save(period);
+            updatedPeriods.add(savedPeriod);
 
             // Удалить бронирование
             reservationRepository.delete(reservation);
+        }
 
-            for (ServiceAvailabilityPeriod period : updatedPeriods) {
-                mergeAdjacentPeriods(period.getService(), period.getStartDate(), period.getEndDate());
-            }
+        // Объединить все обновленные периоды
+        for (ServiceAvailabilityPeriod period : updatedPeriods) {
+            mergeAdjacentPeriods(period.getService(), period.getStartDate(), period.getEndDate());
         }
     }
 
@@ -136,7 +139,7 @@ public class CapacityManagementService {
      * Объединяет смежные периоды с одинаковой мощностью
      */
     @Transactional
-    public void mergeAdjacentPeriods(Service service, LocalDate startDate, LocalDate endDate) {
+    public void mergeAdjacentPeriods(org.dev.powermarket.domain.Service service, LocalDate startDate, LocalDate endDate) {
         boolean merged;
         do {
             merged = false;
