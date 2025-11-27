@@ -2,7 +2,7 @@ package org.dev.powermarket.service;
 
 import org.dev.powermarket.domain.Rental;
 import org.dev.powermarket.domain.Service;
-import org.dev.powermarket.domain.ServiceAvailability;
+import org.dev.powermarket.domain.ServiceAvailabilityPeriod;
 import org.dev.powermarket.repository.ServiceAvailabilityRepository;
 import org.dev.powermarket.repository.ServiceRepository;
 import org.dev.powermarket.service.dto.CapacityAvailabilityDto;
@@ -31,21 +31,21 @@ public class CapacityService {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Service not found"));
 
-        List<ServiceAvailability> allAvailabilities = availabilityRepository
+        List<ServiceAvailabilityPeriod> allAvailabilities = availabilityRepository
                 .findByServiceAndDateRange(service, startDate, endDate);
 
-        List<ServiceAvailability> reservedAvailabilities = availabilityRepository
+        List<ServiceAvailabilityPeriod> reservedAvailabilities = availabilityRepository
                 .findReservedAvailabilities(service, startDate, endDate);
 
         // Group by date
-        Map<LocalDate, List<ServiceAvailability>> reservedByDate = reservedAvailabilities.stream()
-                .collect(Collectors.groupingBy(ServiceAvailability::getAvailableDate));
+        Map<LocalDate, List<ServiceAvailabilityPeriod>> reservedByDate = reservedAvailabilities.stream()
+                .collect(Collectors.groupingBy(ServiceAvailabilityPeriod::getAvailableDate));
 
         List<CapacityAvailabilityDto> result = new ArrayList<>();
         LocalDate currentDate = startDate;
 
         while (!currentDate.isAfter(endDate)) {
-            List<ServiceAvailability> reserved = reservedByDate.getOrDefault(currentDate, List.of());
+            List<ServiceAvailabilityPeriod> reserved = reservedByDate.getOrDefault(currentDate, List.of());
 
             int totalCapacity = service.getTotalCapacityUnits();
             int occupiedCapacity = reserved.size();

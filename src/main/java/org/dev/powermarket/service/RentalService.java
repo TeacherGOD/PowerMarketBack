@@ -1,5 +1,6 @@
 package org.dev.powermarket.service;
 
+import lombok.RequiredArgsConstructor;
 import org.dev.powermarket.domain.*;
 import org.dev.powermarket.domain.enums.NotificationType;
 import org.dev.powermarket.domain.enums.RentalRequestStatus;
@@ -12,12 +13,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class RentalService {
 
     private final RentalRepository rentalRepository;
@@ -26,20 +29,8 @@ public class RentalService {
     private final AuthorizedUserRepository userRepository;
     private final RentalRequestRepository rentalRequestRepository;
     private final NotificationRepository notificationRepository;
+    private final CapacityManagementService capacityManagementService;
 
-    public RentalService(RentalRepository rentalRepository,
-                         ChatRepository chatRepository,
-                         ServiceAvailabilityRepository availabilityRepository,
-                         AuthorizedUserRepository userRepository,
-                         RentalRequestRepository rentalRequestRepository,
-                         NotificationRepository notificationRepository) {
-        this.rentalRepository = rentalRepository;
-        this.chatRepository = chatRepository;
-        this.availabilityRepository = availabilityRepository;
-        this.userRepository = userRepository;
-        this.rentalRequestRepository = rentalRequestRepository;
-        this.notificationRepository = notificationRepository;
-    }
 
     @Transactional
     public void createRentalFromRequest(RentalRequest request) {
@@ -131,17 +122,17 @@ public class RentalService {
             rentalRequestRepository.save(request);
 
             // Reserve dates in availability calendar
-            List<ServiceAvailability> availabilities = availabilityRepository
-                    .findOverlappingAvailabilities(
-                            request.getService(),
-                            request.getStartDate(),
-                            request.getEndDate()
-                    );
+            if (rental.getSupplierConfirmed() && rental.getTenantConfirmed()) {
+                request.setStatus(RentalRequestStatus.CONFIRMED);
+                rentalRequestRepository.save(request);
 
-            for (ServiceAvailability availability : availabilities) {
-                availability.setIsReserved(true);
-                availability.setReservedByRental(rental);
-                availabilityRepository.save(availability);
+                // ЗАМЕНЯЕМ старую логику резервирования:
+                capacityManagementService.reserveCapacity(
+                        rental,
+                        request.getStartDate(),
+                        request.getEndDate(),
+                        request.getCapacityNeeded() // BigDecimal
+                );
             }
         }
 
@@ -190,6 +181,8 @@ public class RentalService {
         rental.setIsActive(false);
         rentalRequestRepository.save(request);
         rentalRepository.save(rental);
+
+        capacityManagementService.releaseCapacity(rental);
 
         // Notify both parties
         createNotification(
@@ -290,7 +283,7 @@ public class RentalService {
         dto.setTenantId(rental.getTenant().getId());
         dto.setTenantName(rental.getTenant().getFullName());
         dto.setStartDate(rental.getStartDate());
-        dto.setCapacityRented(Double.parseDouble(rental.getService().getCapacity()));
+        dto.setCapacityRented(rental.getService().getMaxCapacity().doubleValue());
         dto.setEndDate(rental.getEndDate());
         dto.setTotalPrice(rental.getTotalPrice());
         dto.setChatId(rental.getChat() != null ? rental.getChat().getId() : null);

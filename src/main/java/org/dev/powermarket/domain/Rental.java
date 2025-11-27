@@ -9,6 +9,8 @@ import org.hibernate.annotations.UuidGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Setter
@@ -23,9 +25,18 @@ public class Rental {
     @UuidGenerator
     private UUID id;
 
+
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rental_request_id", nullable = false)
     private RentalRequest rentalRequest;
+
+    @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CapacityReservation> capacityReservations = new ArrayList<>();
+
+    // Запрашиваемая мощность
+    @Column(name = "capacity_needed", precision = 10, scale = 2, nullable = false)
+    private BigDecimal capacityNeeded;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)

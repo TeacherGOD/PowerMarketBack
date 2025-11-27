@@ -1,7 +1,7 @@
 package org.dev.powermarket.service;
 
 import org.dev.powermarket.domain.Service;
-import org.dev.powermarket.domain.ServiceAvailability;
+import org.dev.powermarket.domain.ServiceAvailabilityPeriod;
 import org.dev.powermarket.security.entity.User;
 import org.dev.powermarket.domain.enums.Role;
 import org.dev.powermarket.domain.enums.ServiceCategory;
@@ -69,7 +69,7 @@ public class ServiceService {
             for (CreateServiceRequest.AvailabilityPeriod period : request.getAvailabilities()) {
                 LocalDate currentDate = period.getStartDate();
                 while (!currentDate.isAfter(period.getEndDate())) {
-                    ServiceAvailability availability = new ServiceAvailability();
+                    ServiceAvailabilityPeriod availability = new ServiceAvailabilityPeriod();
                     availability.setService(saved);
                     availability.setAvailableDate(currentDate);
                     availability.setIsReserved(false);
@@ -193,7 +193,7 @@ public class ServiceService {
         dto.setCreatedAt(service.getCreatedAt());
         dto.setAvailableCapacity(service.getAvailableCapacity());
 
-        List<ServiceAvailability> freeAvailabilities = availabilityRepository
+        List<ServiceAvailabilityPeriod> freeAvailabilities = availabilityRepository
                 .findByServiceAndIsReservedFalse(service);
         dto.setAvailableCapacityUnits(freeAvailabilities.isEmpty() ? 0 : service.getTotalCapacityUnits());
 
@@ -205,7 +205,7 @@ public class ServiceService {
         return dto;
     }
 
-    private ServiceAvailabilityDto toAvailabilityDto(ServiceAvailability availability) {
+    private ServiceAvailabilityDto toAvailabilityDto(ServiceAvailabilityPeriod availability) {
         return new ServiceAvailabilityDto(
                 availability.getId(),
                 availability.getAvailableDate(),

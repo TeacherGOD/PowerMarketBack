@@ -1,5 +1,6 @@
 package org.dev.powermarket.repository;
 
+import jakarta.validation.constraints.NotNull;
 import org.dev.powermarket.domain.Service;
 import org.dev.powermarket.security.entity.User;
 import org.dev.powermarket.domain.enums.ServiceCategory;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -30,4 +32,5 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
     List<Service> findBySupplierAndIsActiveTrueAndDeletedFalse(User supplier);
 
     List<Service> findByIdInAndIsActiveTrueAndDeletedFalse(List<UUID> ids);
+
 }

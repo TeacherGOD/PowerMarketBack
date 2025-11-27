@@ -1,5 +1,6 @@
 package org.dev.powermarket.service;
 
+import lombok.RequiredArgsConstructor;
 import org.dev.powermarket.domain.*;
 import org.dev.powermarket.domain.enums.NotificationType;
 import org.dev.powermarket.domain.enums.RentalRequestStatus;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RentalRequestService {
 
     private final RentalRequestRepository rentalRequestRepository;
@@ -29,24 +31,7 @@ public class RentalRequestService {
     private final RentalService rentalService;
     private final RentalRepository rentalRepository;
     private final ChatRepository chatRepository;
-
-    public RentalRequestService(RentalRequestRepository rentalRequestRepository,
-                                ServiceRepository serviceRepository,
-                                ServiceAvailabilityRepository availabilityRepository,
-                                AuthorizedUserRepository userRepository,
-                                NotificationRepository notificationRepository,
-                                RentalService rentalService,
-                                RentalRepository rentalRepository,
-                                ChatRepository chatRepository) {
-        this.rentalRequestRepository = rentalRequestRepository;
-        this.serviceRepository = serviceRepository;
-        this.availabilityRepository = availabilityRepository;
-        this.userRepository = userRepository;
-        this.notificationRepository = notificationRepository;
-        this.rentalService = rentalService;
-        this.rentalRepository = rentalRepository;
-        this.chatRepository = chatRepository;
-    }
+    private final CapacityManagementService capacityManagementService;
 
     @Transactional
     public RentalRequestDto createRentalRequest(String email, CreateRentalRequestRequest request) {
@@ -67,11 +52,18 @@ public class RentalRequestService {
         long days = request.getEndDate().toEpochDay() - request.getStartDate().toEpochDay() + 1;
 
         // Check if dates are available
-        boolean isAvailable = availabilityRepository.isDateRangeAvailable(
-                service, request.getStartDate(), request.getEndDate(), days);
+//        boolean isAvailable = availabilityRepository.isDateRangeAvailable(
+//                service, request.getStartDate(), request.getEndDate(), days);
+
+        boolean isAvailable = capacityManagementService.isCapacityAvailable(
+                request.getServiceId(),
+                request.getStartDate(),
+                request.getEndDate(),
+                new BigDecimal(request.getCapacityNeeded())
+        );
 
         if (!isAvailable) {
-            throw new IllegalArgumentException("Selected dates are not available");
+            throw new IllegalArgumentException("Selected dates are not available or not enough capacity");
         }
 
         // Calculate total price

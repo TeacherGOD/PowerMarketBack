@@ -40,8 +40,8 @@ public class RentalRequest {
     @Column(name = "total_price", precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
-    @Column(name = "capacity_needed", nullable = false)
-    private Integer capacityNeeded;
+    @Column(name = "capacity_needed", precision = 10, scale = 2, nullable = false)
+    private BigDecimal capacityNeeded;
 
     @Column(columnDefinition = "TEXT")
     private String message; // Сообщение от арендатора
