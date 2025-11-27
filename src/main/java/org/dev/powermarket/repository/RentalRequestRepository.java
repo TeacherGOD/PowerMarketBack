@@ -2,6 +2,7 @@ package org.dev.powermarket.repository;
 
 import org.dev.powermarket.domain.RentalRequest;
 import org.dev.powermarket.domain.Service;
+import org.dev.powermarket.repository.projection.StatusCountProjection;
 import org.dev.powermarket.security.entity.User;
 import org.dev.powermarket.domain.enums.RentalRequestStatus;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,4 +33,19 @@ public interface RentalRequestRepository extends JpaRepository<RentalRequest, UU
     List<RentalRequest> findByServiceAndStatus(Service service, RentalRequestStatus status);
     
     long countByServiceSupplierAndStatus(User supplier, RentalRequestStatus status);
+
+    @Query("SELECT COUNT(r) FROM RentalRequest r WHERE r.service.supplier = :supplier " +
+            "AND r.status = org.dev.powermarket.domain.enums.RentalRequestStatus.PENDING " +
+            "AND r.createdAt BETWEEN :fromStart AND :toEnd")
+    long countPendingRequestsBySupplierAndPeriod(@Param("supplier") User supplier,
+                                                 @Param("fromStart") Instant from,
+                                                 @Param("toEnd") Instant to);
+
+    @Query("SELECT r.status as status, COUNT(r) as count FROM RentalRequest r WHERE r.service.supplier = :supplier " +
+            "AND r.createdAt BETWEEN :fromStart AND :toEnd " +
+            "GROUP BY r.status")
+    List<StatusCountProjection> getStatusCountsBySupplierAndPeriod(@Param("supplier") User supplier,
+                                                                   @Param("fromStart") Instant fromStart,
+                                                                   @Param("toEnd") Instant toEnd);
 }
+

@@ -16,7 +16,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class RentalService {
@@ -218,7 +217,7 @@ public class RentalService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         List<Rental> rentals = rentalRepository.findBySupplierOrTenant(user, user);
-        return rentals.stream().map(this::toDto).collect(Collectors.toList());
+        return rentals.stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
