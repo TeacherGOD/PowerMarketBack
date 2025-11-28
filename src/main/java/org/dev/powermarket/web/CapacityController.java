@@ -37,15 +37,15 @@ public class CapacityController {
         return ResponseEntity.ok(availability);
     }
 
-    @GetMapping("/service/{serviceId}/check")
-    @Operation(summary = "Check if capacity is available",
-            description = "Check if service has available capacity for the given date range and required capacity")
-    public ResponseEntity<Boolean> checkCapacityAvailable(
-            @PathVariable UUID serviceId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam BigDecimal requiredCapacity) {
-        boolean available = capacityService.isCapacityAvailable(serviceId, startDate, endDate, requiredCapacity);
-        return ResponseEntity.ok(available);
-    }
+//    @GetMapping("/service/{serviceId}/check")
+//    @Operation(summary = "Check if capacity is available",
+//            description = "Check if service has available capacity for the given date range and required capacity")
+//    public ResponseEntity<Boolean> checkCapacityAvailable(
+//            @PathVariable UUID serviceId,
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+//            @RequestParam BigDecimal requiredCapacity) {
+//        boolean available = capacityService.isCapacityAvailable(serviceId, startDate, endDate, requiredCapacity);
+//        return ResponseEntity.ok(available);
+//    }
 }

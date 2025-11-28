@@ -17,13 +17,14 @@ import java.util.UUID;
 public class RentalDto {
     private UUID id;
     private UUID serviceId;
+    private UUID rentalRequestId;
     private String serviceTitle;
     private UUID supplierId;
     private String supplierName;
     private UUID tenantId;
     private String tenantName;
-    private BigDecimal capacityNeeded;
-    private BigDecimal capacityRented;
+    private BigDecimal requestedCapacity; // Запрашиваемая мощность
+    private BigDecimal serviceMaxCapacity; // Максимальная мощность сервиса
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;

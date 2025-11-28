@@ -37,11 +37,19 @@ public class ServiceAvailabilityPeriod {
     @Column(name = "total_capacity", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalCapacity;
 
+    @Column(name = "available_capacity", precision = 10, scale = 2, nullable = false)
+    private BigDecimal availableCapacity;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
 
-
+    @PrePersist
+    public void prePersist() {
+        if (this.availableCapacity == null) {
+            this.availableCapacity = this.totalCapacity; // Изначально вся мощность доступна
+        }
+    }
 
     public boolean overlapsWith(LocalDate start, LocalDate end) {
         return !startDate.isAfter(end) && !endDate.isBefore(start);

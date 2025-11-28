@@ -72,12 +72,4 @@ public class RentalRequestController {
             @PathVariable UUID requestId) {
         return ResponseEntity.ok(rentalRequestService.getRequest(principal.getUsername(), requestId));
     }
-
-    @PostMapping("/{rentalId}/approve")
-    @Operation(summary = "Confirm rental", description = "Confirm rental agreement (supplier or tenant)")
-    public ResponseEntity<RentalDto> confirmRental(
-            @AuthenticationPrincipal UserDetails principal,
-            @PathVariable UUID rentalId) {
-        return ResponseEntity.ok(rentalService.confirmRental(principal.getUsername(), rentalId));
-    }
 }

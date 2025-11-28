@@ -49,7 +49,6 @@ public class RentalRequestService {
             throw new IllegalArgumentException("Service is not active");
         }
 
-        // 🔄 ЗАМЕНА: Проверяем доступность мощности через CapacityManagementService
         boolean isAvailable = capacityManagementService.isCapacityAvailable(
                 service.getId(),
                 request.getStartDate(),
@@ -92,6 +91,7 @@ public class RentalRequestService {
         rental.setIsActive(true);
 
         Rental savedRental = rentalRepository.save(rental);
+        saved.setRental(savedRental);
 
         Chat chat = new Chat();
         chat.setRental(savedRental);
@@ -258,6 +258,10 @@ public class RentalRequestService {
         dto.setCreatedAt(request.getCreatedAt());
         dto.setRespondedAt(request.getRespondedAt());
         dto.setCapacityNeeded(request.getCapacityNeeded());
+        if (request.getRental() != null) {
+            dto.setRentalId(request.getRental().getId());
+        }
+
         return dto;
     }
 }

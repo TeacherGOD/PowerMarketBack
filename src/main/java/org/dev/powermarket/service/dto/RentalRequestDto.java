@@ -15,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RentalRequestDto {
     private UUID id;
+    private UUID rentalId;
     private UUID serviceId;
     private String serviceTitle;
     private UUID tenantId;

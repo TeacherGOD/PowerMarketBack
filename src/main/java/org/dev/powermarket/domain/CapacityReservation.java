@@ -29,16 +29,17 @@ public class CapacityReservation {
     @JoinColumn(name = "availability_period_id", nullable = false)
     private ServiceAvailabilityPeriod availabilityPeriod;
 
-    // Конкретная дата бронирования (в рамках периода)
-    @Column(name = "reservation_date", nullable = false)
-    private LocalDate reservationDate;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
 
-    // Сколько мощности забронировано на эту дату
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
+
+    // Сколько мощности забронировано на весь период
     @Column(name = "reserved_capacity", precision = 10, scale = 2, nullable = false)
     private BigDecimal reservedCapacity;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
-
 }

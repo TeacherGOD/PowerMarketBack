@@ -1,6 +1,7 @@
 package org.dev.powermarket.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.dev.powermarket.domain.*;
 import org.dev.powermarket.domain.enums.NotificationType;
 import org.dev.powermarket.domain.enums.RentalRequestStatus;
@@ -18,9 +19,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RentalService {
 
     private final RentalRepository rentalRepository;
@@ -286,10 +289,9 @@ public class RentalService {
         dto.setStatus(rental.getRentalRequest().getStatus());
         dto.setIsActive(rental.getIsActive());
         dto.setCreatedAt(rental.getCreatedAt());
-
-        dto.setCapacityNeeded(rental.getCapacityNeeded());
-        dto.setCapacityRented(rental.getService().getMaxCapacity());
-
+        dto.setRequestedCapacity(rental.getCapacityNeeded());
+        dto.setServiceMaxCapacity(rental.getService().getMaxCapacity());
+        dto.setRentalRequestId(rental.getRentalRequest().getId());
         return dto;
     }
 }

@@ -17,32 +17,31 @@ import java.util.UUID;
 @Repository
 public interface CapacityReservationRepository extends JpaRepository<CapacityReservation, UUID> {
 
-    // Найти бронирования для rental
+    // Найти бронирования по rental
     List<CapacityReservation> findByRental(Rental rental);
 
-    // Найти бронирования по дате и сервису
+    // Найти бронирования, пересекающиеся с периодом
     @Query("SELECT cr FROM CapacityReservation cr WHERE " +
-            "cr.availabilityPeriod.service = :service AND " +
-            "cr.reservationDate BETWEEN :startDate AND :endDate")
-    List<CapacityReservation> findByServiceAndDateRange(
+            "cr.rental.service = :service AND " +
+            "cr.startDate <= :endDate AND cr.endDate >= :startDate")
+    List<CapacityReservation> findOverlappingReservations(
             @Param("service") Service service,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    // Получить сумму забронированной мощности на конкретную дату
-    @Query("SELECT COALESCE(SUM(cr.reservedCapacity), 0) FROM CapacityReservation cr WHERE " +
-            "cr.availabilityPeriod.service = :service AND " +
-            "cr.reservationDate = :date")
-    BigDecimal getReservedCapacityForDate(
-            @Param("service") Service service,
-            @Param("date") LocalDate date);
-
-
-    // Получить сумму забронированной мощности на дату в рамках периода
     @Query("SELECT COALESCE(SUM(cr.reservedCapacity), 0) FROM CapacityReservation cr WHERE " +
             "cr.availabilityPeriod = :period AND " +
-            "cr.reservationDate = :date")
+            ":date BETWEEN cr.startDate AND cr.endDate")
     BigDecimal getReservedCapacityForPeriodAndDate(
             @Param("period") ServiceAvailabilityPeriod period,
             @Param("date") LocalDate date);
+
+    // ✅ ДОБАВЛЯЕМ: получаем все бронирования для сервиса и диапазона дат
+    @Query("SELECT cr FROM CapacityReservation cr WHERE " +
+            "cr.rental.service = :service AND " +
+            "cr.startDate <= :endDate AND cr.endDate >= :startDate")
+    List<CapacityReservation> findByServiceAndDateRange(
+            @Param("service") Service service,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
