@@ -9,6 +9,7 @@ import org.dev.powermarket.repository.*;
 import org.dev.powermarket.security.entity.User;
 import org.dev.powermarket.security.repository.AuthorizedUserRepository;
 import org.dev.powermarket.service.dto.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,6 @@ public class RentalRequestService {
 
     private final RentalRequestRepository rentalRequestRepository;
     private final ServiceRepository serviceRepository;
-    private final ServiceAvailabilityRepository availabilityRepository;
     private final AuthorizedUserRepository userRepository;
     private final NotificationRepository notificationRepository;
     private final RentalService rentalService;
@@ -37,7 +37,7 @@ public class RentalRequestService {
     public RentalRequestDto createRentalRequest(String email, CreateRentalRequestRequest request) {
         User tenant = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        System.out.println(tenant);
+
         if (tenant.getRole() != Role.TENANT) {
             throw new AccessDeniedException("Only tenants can create rental requests");
         }
@@ -49,24 +49,20 @@ public class RentalRequestService {
             throw new IllegalArgumentException("Service is not active");
         }
 
-        long days = request.getEndDate().toEpochDay() - request.getStartDate().toEpochDay() + 1;
-
-        // Check if dates are available
-//        boolean isAvailable = availabilityRepository.isDateRangeAvailable(
-//                service, request.getStartDate(), request.getEndDate(), days);
-
+        // 🔄 ЗАМЕНА: Проверяем доступность мощности через CapacityManagementService
         boolean isAvailable = capacityManagementService.isCapacityAvailable(
-                request.getServiceId(),
+                service.getId(),
                 request.getStartDate(),
                 request.getEndDate(),
-                new BigDecimal(request.getCapacityNeeded())
+                request.getCapacityNeeded()
         );
 
         if (!isAvailable) {
-            throw new IllegalArgumentException("Selected dates are not available or not enough capacity");
+            throw new IllegalArgumentException("Not enough capacity available for selected dates");
         }
 
         // Calculate total price
+        long days = request.getEndDate().toEpochDay() - request.getStartDate().toEpochDay() + 1;
         BigDecimal totalPrice = service.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
         RentalRequest rentalRequest = new RentalRequest();
@@ -76,11 +72,12 @@ public class RentalRequestService {
         rentalRequest.setEndDate(request.getEndDate());
         rentalRequest.setTotalPrice(totalPrice);
         rentalRequest.setMessage("");
-        rentalRequest.setCapacityNeeded(BigDecimal.valueOf(request.getCapacityNeeded()));
+        rentalRequest.setCapacityNeeded(request.getCapacityNeeded());
         rentalRequest.setStatus(RentalRequestStatus.PENDING);
 
         RentalRequest saved = rentalRequestRepository.save(rentalRequest);
 
+        // Create rental and chat (without capacity reservation - that happens on confirmation)
         Rental rental = new Rental();
         rental.setRentalRequest(saved);
         rental.setService(service);
@@ -89,6 +86,7 @@ public class RentalRequestService {
         rental.setStartDate(request.getStartDate());
         rental.setEndDate(request.getEndDate());
         rental.setTotalPrice(totalPrice);
+        rental.setCapacityNeeded(request.getCapacityNeeded());
         rental.setSupplierConfirmed(false);
         rental.setTenantConfirmed(false);
         rental.setIsActive(true);
@@ -134,7 +132,7 @@ public class RentalRequestService {
         }
 
         if (request.getApproved()) {
-            rentalRequest.setStatus(RentalRequestStatus.CONFIRMED);
+            rentalRequest.setStatus(RentalRequestStatus.IN_CONTRACT);
             rentalRequest.setRespondedAt(Instant.now());
 
             // Create rental and chat
@@ -175,15 +173,15 @@ public class RentalRequestService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (user.getRole() == Role.TENANT) {
-            return rentalRequestRepository.findByTenant(user, org.springframework.data.domain.Pageable.unpaged())
+            return rentalRequestRepository.findByTenant(user, Pageable.unpaged())
                     .stream()
                     .map(this::toDto)
-                    .collect(Collectors.toList());
+                    .toList();
         } else if (user.getRole() == Role.SUPPLIER) {
-            return rentalRequestRepository.findBySupplier(user, org.springframework.data.domain.Pageable.unpaged())
+            return rentalRequestRepository.findBySupplier(user, Pageable.unpaged())
                     .stream()
                     .map(this::toDto)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         return List.of();
@@ -194,10 +192,10 @@ public class RentalRequestService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return rentalRequestRepository.findBySupplier(user, org.springframework.data.domain.Pageable.unpaged())
+        return rentalRequestRepository.findBySupplier(user, Pageable.unpaged())
                 .stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -205,10 +203,10 @@ public class RentalRequestService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return rentalRequestRepository.findByTenant(user, org.springframework.data.domain.Pageable.unpaged())
+        return rentalRequestRepository.findByTenant(user, Pageable.unpaged())
                 .stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -259,7 +257,7 @@ public class RentalRequestService {
         dto.setRejectionReason(request.getRejectionReason());
         dto.setCreatedAt(request.getCreatedAt());
         dto.setRespondedAt(request.getRespondedAt());
-        dto.setCapacityNeeded(request.getCapacityNeeded().doubleValue());
+        dto.setCapacityNeeded(request.getCapacityNeeded());
         return dto;
     }
 }

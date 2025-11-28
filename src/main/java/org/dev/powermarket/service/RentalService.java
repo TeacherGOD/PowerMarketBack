@@ -25,7 +25,6 @@ public class RentalService {
 
     private final RentalRepository rentalRepository;
     private final ChatRepository chatRepository;
-    private final ServiceAvailabilityRepository availabilityRepository;
     private final AuthorizedUserRepository userRepository;
     private final RentalRequestRepository rentalRequestRepository;
     private final NotificationRepository notificationRepository;
@@ -34,7 +33,7 @@ public class RentalService {
 
     @Transactional
     public void createRentalFromRequest(RentalRequest request) {
-        // Create rental only if it doesn't already exist (created during request submission)
+        // Create rental only if it doesn't already exist
         Rental rental = rentalRepository.findByRentalRequest(request).orElse(null);
 
         if (rental == null) {
@@ -46,6 +45,7 @@ public class RentalService {
             rental.setStartDate(request.getStartDate());
             rental.setEndDate(request.getEndDate());
             rental.setTotalPrice(request.getTotalPrice());
+            rental.setCapacityNeeded(request.getCapacityNeeded());
             rental.setSupplierConfirmed(false);
             rental.setTenantConfirmed(false);
             rental.setIsActive(true);
@@ -121,19 +121,12 @@ public class RentalService {
             request.setStatus(RentalRequestStatus.CONFIRMED);
             rentalRequestRepository.save(request);
 
-            // Reserve dates in availability calendar
-            if (rental.getSupplierConfirmed() && rental.getTenantConfirmed()) {
-                request.setStatus(RentalRequestStatus.CONFIRMED);
-                rentalRequestRepository.save(request);
-
-                // ЗАМЕНЯЕМ старую логику резервирования:
-                capacityManagementService.reserveCapacity(
-                        rental,
-                        request.getStartDate(),
-                        request.getEndDate(),
-                        request.getCapacityNeeded() // BigDecimal
-                );
-            }
+            capacityManagementService.reserveCapacity(
+                    rental,
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getCapacityNeeded()
+            );
         }
 
         Rental saved = rentalRepository.save(rental);
@@ -230,16 +223,16 @@ public class RentalService {
                 .filter(r -> r.getRentalRequest().getStatus() == RentalRequestStatus.COMPLETED)
                 .count();
 
-        java.math.BigDecimal totalRevenue = rentals.stream()
+        BigDecimal totalRevenue = rentals.stream()
                 .filter(r -> r.getRentalRequest().getStatus() == RentalRequestStatus.COMPLETED)
                 .map(Rental::getTotalPrice)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Calculate average rating from user's reviews
-        java.math.BigDecimal averageRating = user.getAverageRating() != null ?
-                user.getAverageRating() : java.math.BigDecimal.ZERO;
+        BigDecimal averageRating = user.getAverageRating() != null ?
+                user.getAverageRating() : BigDecimal.ZERO;
 
-        return new org.dev.powermarket.service.dto.RentalStatsDto(
+        return new RentalStatsDto(
                 totalRentals, activeRentals, completedRentals, totalRevenue, averageRating);
     }
 
@@ -283,7 +276,6 @@ public class RentalService {
         dto.setTenantId(rental.getTenant().getId());
         dto.setTenantName(rental.getTenant().getFullName());
         dto.setStartDate(rental.getStartDate());
-        dto.setCapacityRented(rental.getService().getMaxCapacity().doubleValue());
         dto.setEndDate(rental.getEndDate());
         dto.setTotalPrice(rental.getTotalPrice());
         dto.setChatId(rental.getChat() != null ? rental.getChat().getId() : null);
@@ -294,6 +286,10 @@ public class RentalService {
         dto.setStatus(rental.getRentalRequest().getStatus());
         dto.setIsActive(rental.getIsActive());
         dto.setCreatedAt(rental.getCreatedAt());
+
+        dto.setCapacityNeeded(rental.getCapacityNeeded());
+        dto.setCapacityRented(rental.getService().getMaxCapacity());
+
         return dto;
     }
 }

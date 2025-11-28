@@ -20,11 +20,8 @@ public class ServiceDto {
     private String description;
     private ServiceCategory category;
     private BigDecimal pricePerDay;
+    private BigDecimal maxCapacity;
     private String location;
-    private String totalCapacity;
-    private String availableCapacity;
-    private Integer totalCapacityUnits;
-    private Integer availableCapacityUnits;
     private String technicalSpecs;
     private UUID supplierId;
     private String supplierName;
@@ -32,5 +29,4 @@ public class ServiceDto {
     private BigDecimal averageRating;
     private Integer totalReviews;
     private Instant createdAt;
-    private List<ServiceAvailabilityDto> availabilities;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,9 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 public class CapacityAvailabilityDto {
     private LocalDate date;
-    private Integer totalCapacity;
-    private Integer availableCapacity;
-    private Integer occupiedCapacity;
+    private BigDecimal totalCapacity;
+    private BigDecimal availableCapacity;
+    private BigDecimal reservedCapacity;
     private List<OccupiedSlot> occupiedSlots;
 
     @Data
@@ -24,6 +25,6 @@ public class CapacityAvailabilityDto {
         private LocalDate startDate;
         private LocalDate endDate;
         private String tenantName;
-        private Integer capacityUnits;
+        private BigDecimal reservedCapacity;
     }
 }

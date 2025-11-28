@@ -14,7 +14,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-@Table(name = "service_availability")
+@Table(name = "service_availability_periods")
 public class ServiceAvailabilityPeriod {
 
     @Id
@@ -37,9 +37,6 @@ public class ServiceAvailabilityPeriod {
     @Column(name = "total_capacity", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalCapacity;
 
-    @Column(name = "available_capacity", precision = 10, scale = 2, nullable = false)
-    private BigDecimal availableCapacity;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
@@ -48,5 +45,9 @@ public class ServiceAvailabilityPeriod {
 
     public boolean overlapsWith(LocalDate start, LocalDate end) {
         return !startDate.isAfter(end) && !endDate.isBefore(start);
+    }
+
+    public boolean containsDate(LocalDate date) {
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
     }
 }

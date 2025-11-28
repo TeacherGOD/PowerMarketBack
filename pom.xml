@@ -109,6 +109,7 @@
             <version>2.4.240</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

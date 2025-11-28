@@ -22,7 +22,8 @@ public class RentalDto {
     private String supplierName;
     private UUID tenantId;
     private String tenantName;
-    private Double capacityRented;
+    private BigDecimal capacityNeeded;
+    private BigDecimal capacityRented;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;

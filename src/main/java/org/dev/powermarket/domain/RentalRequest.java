@@ -27,6 +27,9 @@ public class RentalRequest {
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
 
+    @OneToOne(mappedBy = "rentalRequest", fetch = FetchType.LAZY)
+    private Rental rental;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private User tenant;

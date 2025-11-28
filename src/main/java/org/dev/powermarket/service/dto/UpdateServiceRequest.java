@@ -21,7 +21,7 @@ public class UpdateServiceRequest {
     private String location;
 
     @Min(1)
-    private String capacity;
+    private BigDecimal maxCapacity;
 
     private String technicalSpecs;
 

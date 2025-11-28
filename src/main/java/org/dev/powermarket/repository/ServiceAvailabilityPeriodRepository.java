@@ -19,23 +19,22 @@ public interface ServiceAvailabilityPeriodRepository extends JpaRepository<Servi
     // Найти периоды с достаточной доступной мощностью
     @Query("SELECT p FROM ServiceAvailabilityPeriod p WHERE " +
             "p.service = :service AND " +
-            "p.startDate <= :endDate AND p.endDate >= :startDate AND " +
-            "p.availableCapacity >= :requiredCapacity")
-    List<ServiceAvailabilityPeriod> findAvailablePeriodsWithCapacity(
-            @Param("service") Service service,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            @Param("requiredCapacity") BigDecimal requiredCapacity);
-
-    // Найти все пересекающиеся периоды
-    @Query("SELECT p FROM ServiceAvailabilityPeriod p WHERE " +
-            "p.service = :service AND " +
             "p.startDate <= :endDate AND p.endDate >= :startDate")
     List<ServiceAvailabilityPeriod> findOverlappingPeriods(
             @Param("service") Service service,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
+    // Найти период по сервису и дате
+    @Query("SELECT p FROM ServiceAvailabilityPeriod p WHERE " +
+            "p.service = :service AND " +
+            "p.startDate <= :date AND p.endDate >= :date")
+    Optional<ServiceAvailabilityPeriod> findByServiceAndDate(
+            @Param("service") Service service,
+            @Param("date") LocalDate date);
+
+    // Найти периоды по сервису
+    List<ServiceAvailabilityPeriod> findByService(Service service);
 
     // Найти период по сервису и конечной дате
     Optional<ServiceAvailabilityPeriod> findByServiceAndEndDate(Service service, LocalDate endDate);
@@ -43,11 +42,6 @@ public interface ServiceAvailabilityPeriodRepository extends JpaRepository<Servi
     // Найти период по сервису и начальной дате
     Optional<ServiceAvailabilityPeriod> findByServiceAndStartDate(Service service, LocalDate startDate);
 
-    // Найти период по сервису, начальной и конечной дате
     Optional<ServiceAvailabilityPeriod> findByServiceAndStartDateAndEndDate(
             Service service, LocalDate startDate, LocalDate endDate);
-
-    // Найти все периоды для сервиса в диапазоне дат (для отладки)
-    List<ServiceAvailabilityPeriod> findByServiceAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            Service service, LocalDate endDate, LocalDate startDate);
 }

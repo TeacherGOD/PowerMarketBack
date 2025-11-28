@@ -3,6 +3,7 @@ package org.dev.powermarket.repository;
 import org.dev.powermarket.domain.CapacityReservation;
 import org.dev.powermarket.domain.Rental;
 import org.dev.powermarket.domain.Service;
+import org.dev.powermarket.domain.ServiceAvailabilityPeriod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,5 +35,14 @@ public interface CapacityReservationRepository extends JpaRepository<CapacityRes
             "cr.reservationDate = :date")
     BigDecimal getReservedCapacityForDate(
             @Param("service") Service service,
+            @Param("date") LocalDate date);
+
+
+    // Получить сумму забронированной мощности на дату в рамках периода
+    @Query("SELECT COALESCE(SUM(cr.reservedCapacity), 0) FROM CapacityReservation cr WHERE " +
+            "cr.availabilityPeriod = :period AND " +
+            "cr.reservationDate = :date")
+    BigDecimal getReservedCapacityForPeriodAndDate(
+            @Param("period") ServiceAvailabilityPeriod period,
             @Param("date") LocalDate date);
 }

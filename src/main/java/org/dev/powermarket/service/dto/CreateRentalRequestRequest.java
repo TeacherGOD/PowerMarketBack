@@ -3,6 +3,7 @@ package org.dev.powermarket.service.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -17,5 +18,5 @@ public class CreateRentalRequestRequest {
     @NotNull(message = "End date is required")
     private LocalDate endDate;
 
-    private Integer capacityNeeded;
+    private BigDecimal capacityNeeded;
 }

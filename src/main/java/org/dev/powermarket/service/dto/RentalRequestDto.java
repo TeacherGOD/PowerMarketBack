@@ -30,5 +30,5 @@ public class RentalRequestDto {
     private String rejectionReason;
     private Instant createdAt;
     private Instant respondedAt;
-    private double capacityNeeded;
+    private BigDecimal capacityNeeded;
 }
