@@ -1,6 +1,10 @@
 package org.dev.powermarket.web;
 
+import lombok.RequiredArgsConstructor;
+import org.dev.powermarket.domain.dto.request.ServiceSearchByCategoryRequest;
+import org.dev.powermarket.domain.dto.response.ServiceSearchResultResponse;
 import org.dev.powermarket.domain.enums.ServiceCategory;
+import org.dev.powermarket.service.ServiceSearchService;
 import org.dev.powermarket.service.ServiceService;
 import org.dev.powermarket.service.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,17 +21,19 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping({"/api/v1/services","/api/services"})
+@RequiredArgsConstructor
 public class ServiceController {
 
 
-    @Autowired
     private ServiceService serviceService;
+    private final ServiceSearchService serviceSearchService;
 
 
 
@@ -87,5 +93,32 @@ public class ServiceController {
             @PathVariable UUID serviceId) {
         serviceService.deleteService(principal.getUsername(), serviceId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/search/category-capacity")
+    @Operation(summary = "Search services by category and capacity",
+            description = "Search services by category and minimum capacity requirement")
+    public ResponseEntity<Page<ServiceSearchResultResponse>> searchServicesByCategoryAndCapacity(
+            @RequestBody ServiceSearchByCategoryRequest searchRequest) {
+        Page<ServiceSearchResultResponse> results =
+                serviceSearchService.searchServicesByCategoryAndCapacity(searchRequest);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/search/category/{category}/capacity/{minCapacity}")
+    @Operation(summary = "Quick search by category and capacity",
+            description = "Quick search using path variables for category and minimum capacity")
+    public ResponseEntity<Page<ServiceSearchResultResponse>> quickSearchByCategoryAndCapacity(
+            @PathVariable ServiceCategory category,
+            @PathVariable BigDecimal minCapacity,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+
+        ServiceSearchByCategoryRequest searchRequest = new ServiceSearchByCategoryRequest(
+                category, minCapacity, null, null, page, size);
+
+        Page<ServiceSearchResultResponse> results =
+                serviceSearchService.searchServicesByCategoryAndCapacity(searchRequest);
+        return ResponseEntity.ok(results);
     }
 }
