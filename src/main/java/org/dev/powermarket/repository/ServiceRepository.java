@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,5 +33,14 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
     List<Service> findBySupplierAndIsActiveTrueAndDeletedFalse(User supplier);
 
     List<Service> findByIdInAndIsActiveTrueAndDeletedFalse(List<UUID> ids);
+
+    // Поиск сервисов с минимальной мощностью
+    @Query("SELECT s FROM Service s WHERE " +
+            "s.isActive = true AND s.deleted = false AND " +
+            "(:minCapacity IS NULL OR s.maxCapacity >= :minCapacity)")
+    Page<Service> findByMinCapacity(
+            @Param("minCapacity") BigDecimal minCapacity,
+            Pageable pageable);
+
 
 }

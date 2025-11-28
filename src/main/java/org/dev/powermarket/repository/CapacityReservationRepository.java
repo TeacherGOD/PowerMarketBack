@@ -29,14 +29,7 @@ public interface CapacityReservationRepository extends JpaRepository<CapacityRes
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COALESCE(SUM(cr.reservedCapacity), 0) FROM CapacityReservation cr WHERE " +
-            "cr.availabilityPeriod = :period AND " +
-            ":date BETWEEN cr.startDate AND cr.endDate")
-    BigDecimal getReservedCapacityForPeriodAndDate(
-            @Param("period") ServiceAvailabilityPeriod period,
-            @Param("date") LocalDate date);
-
-    // ✅ ДОБАВЛЯЕМ: получаем все бронирования для сервиса и диапазона дат
+    // ✅ ДОБАВЛЯЕМ отсутствующий метод
     @Query("SELECT cr FROM CapacityReservation cr WHERE " +
             "cr.rental.service = :service AND " +
             "cr.startDate <= :endDate AND cr.endDate >= :startDate")
@@ -44,4 +37,12 @@ public interface CapacityReservationRepository extends JpaRepository<CapacityRes
             @Param("service") Service service,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    // Найти сумму забронированной мощности на конкретную дату
+    @Query("SELECT COALESCE(SUM(cr.reservedCapacity), 0) FROM CapacityReservation cr WHERE " +
+            "cr.rental.service = :service AND " +
+            ":date BETWEEN cr.startDate AND cr.endDate")
+    BigDecimal getReservedCapacityForDate(
+            @Param("service") Service service,
+            @Param("date") LocalDate date);
 }

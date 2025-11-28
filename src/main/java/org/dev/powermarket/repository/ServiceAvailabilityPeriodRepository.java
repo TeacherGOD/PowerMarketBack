@@ -23,11 +23,20 @@ public interface ServiceAvailabilityPeriodRepository extends JpaRepository<Servi
             @Param("service") Service service,
             @Param("date") LocalDate date);
 
-    // Найти пересекающиеся периоды
     @Query("SELECT p FROM ServiceAvailabilityPeriod p WHERE " +
             "p.service = :service AND " +
             "p.startDate <= :endDate AND p.endDate >= :startDate")
     List<ServiceAvailabilityPeriod> findOverlappingPeriods(
+            @Param("service") Service service,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    // ✅ ДОБАВЛЯЕМ метод для поиска периодов в диапазоне
+    @Query("SELECT p FROM ServiceAvailabilityPeriod p WHERE " +
+            "p.service = :service AND " +
+            "p.startDate <= :endDate AND p.endDate >= :startDate " +
+            "ORDER BY p.startDate")
+    List<ServiceAvailabilityPeriod> findPeriodsInRange(
             @Param("service") Service service,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);

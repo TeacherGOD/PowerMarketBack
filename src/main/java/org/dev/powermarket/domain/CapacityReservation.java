@@ -25,10 +25,6 @@ public class CapacityReservation {
     @JoinColumn(name = "rental_id", nullable = false)
     private Rental rental;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "availability_period_id", nullable = false)
-    private ServiceAvailabilityPeriod availabilityPeriod;
-
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 

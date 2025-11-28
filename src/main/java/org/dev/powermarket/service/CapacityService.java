@@ -5,6 +5,7 @@ import org.dev.powermarket.domain.CapacityReservation;
 import org.dev.powermarket.domain.Rental;
 import org.dev.powermarket.domain.Service;
 import org.dev.powermarket.domain.ServiceAvailabilityPeriod;
+import org.dev.powermarket.domain.dto.response.CapacityAvailabilityResponse;
 import org.dev.powermarket.repository.CapacityReservationRepository;
 import org.dev.powermarket.repository.ServiceAvailabilityPeriodRepository;
 import org.dev.powermarket.repository.ServiceRepository;
@@ -25,50 +26,50 @@ public class CapacityService {
     private final CapacityReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
-    public List<CapacityAvailabilityDto> getCapacityAvailability(UUID serviceId,
-                                                                 LocalDate startDate,
-                                                                 LocalDate endDate) {
+    public List<CapacityAvailabilityResponse> getCapacityAvailability(UUID serviceId,
+                                                                      LocalDate startDate,
+                                                                      LocalDate endDate) {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Service not found"));
 
-        List<CapacityAvailabilityDto> result = new ArrayList<>();
+        List<CapacityAvailabilityResponse> result = new ArrayList<>();
         LocalDate currentDate = startDate;
 
         while (!currentDate.isAfter(endDate)) {
-            Optional<ServiceAvailabilityPeriod> periodOpt = periodRepository
-                    .findByServiceAndDate(service, currentDate);
+            // Найти период для текущей даты
+            Optional<ServiceAvailabilityPeriod> periodOpt = periodRepository.findByServiceAndDate(service, currentDate);
 
             BigDecimal totalCapacity = BigDecimal.ZERO;
             BigDecimal reservedCapacity = BigDecimal.ZERO;
-            List<CapacityAvailabilityDto.OccupiedSlot> occupiedSlots = new ArrayList<>();
+            List<CapacityAvailabilityResponse.OccupiedSlot> occupiedSlots = new ArrayList<>();
 
             if (periodOpt.isPresent()) {
                 ServiceAvailabilityPeriod period = periodOpt.get();
                 totalCapacity = period.getTotalCapacity();
 
-                // ✅ НОВАЯ ЛОГИКА: находим бронирования на эту дату
-                reservedCapacity = getReservedCapacityForDate(service, currentDate);
+                // Получить забронированную мощность для этой даты
+                reservedCapacity = reservationRepository.getReservedCapacityForDate(service, currentDate);
 
                 // Получить детали бронирований
-                List<CapacityReservation> reservations = reservationRepository
-                        .findOverlappingReservations(service, currentDate, currentDate);
+                List<CapacityReservation> reservations = reservationRepository.findByServiceAndDateRange(
+                        service, currentDate, currentDate);
 
                 occupiedSlots = reservations.stream()
                         .map(reservation -> {
                             Rental rental = reservation.getRental();
-                            return new CapacityAvailabilityDto.OccupiedSlot(
+                            return new CapacityAvailabilityResponse.OccupiedSlot(
                                     rental.getStartDate(),
                                     rental.getEndDate(),
                                     rental.getTenant().getFullName(),
                                     reservation.getReservedCapacity()
                             );
                         })
-                        .collect(Collectors.toList());
+                        .toList();
             }
 
             BigDecimal availableCapacity = totalCapacity.subtract(reservedCapacity);
 
-            CapacityAvailabilityDto dto = new CapacityAvailabilityDto(
+            CapacityAvailabilityResponse response = new CapacityAvailabilityResponse(
                     currentDate,
                     totalCapacity,
                     availableCapacity,
@@ -76,13 +77,12 @@ public class CapacityService {
                     occupiedSlots
             );
 
-            result.add(dto);
+            result.add(response);
             currentDate = currentDate.plusDays(1);
         }
 
         return result;
     }
-
     /**
      * Получить сумму забронированной мощности на конкретную дату
      */
