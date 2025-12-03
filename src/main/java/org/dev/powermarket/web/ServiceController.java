@@ -1,6 +1,7 @@
 package org.dev.powermarket.web;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.dev.powermarket.domain.dto.request.ServiceSearchByCategoryRequest;
 import org.dev.powermarket.domain.dto.response.ServiceSearchResultResponse;
 import org.dev.powermarket.domain.enums.ServiceCategory;
@@ -8,9 +9,6 @@ import org.dev.powermarket.service.ServiceSearchService;
 import org.dev.powermarket.service.ServiceService;
 import org.dev.powermarket.service.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,10 +27,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping({"/api/v1/services","/api/services"})
 @RequiredArgsConstructor
+@Slf4j
 public class ServiceController {
 
 
-    private ServiceService serviceService;
+    private final ServiceService serviceService;
     private final ServiceSearchService serviceSearchService;
 
 
@@ -41,7 +40,7 @@ public class ServiceController {
     public ResponseEntity<ServiceDto> createService(
             @AuthenticationPrincipal UserDetails principal,
             @RequestBody CreateServiceRequest request) {
-        System.out.println(request);
+        log.info(String.valueOf(request));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(serviceService.createService(principal.getUsername(), request));
     }
@@ -72,13 +71,13 @@ public class ServiceController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getMyServices(@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<List<ServiceDto>> getMyServices(@AuthenticationPrincipal UserDetails principal) {
         String role = principal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .findFirst()
                 .orElse("")
                 .toUpperCase();
-        System.out.println(role);
+        log.info(role);
 
         if (role.contains("SUPPLIER")) {
             return ResponseEntity.ok(serviceService.getMyServices(principal.getUsername()));

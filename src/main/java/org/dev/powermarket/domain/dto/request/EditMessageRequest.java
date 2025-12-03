@@ -1,10 +1,10 @@
-package org.dev.powermarket.service.dto;
+package org.dev.powermarket.domain.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record SendMessageRequest(
-        @NotBlank(message = "Message content is required")
+public record EditMessageRequest(
+        @NotBlank
         @Size(max = 2000)
         String content
 ) {}

@@ -1,20 +1,17 @@
-package org.dev.powermarket.service.dto;
+package org.dev.powermarket.domain.dto.response;
 
+import org.dev.powermarket.service.dto.ChatMessageDto;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
-public record ChatDto(
+public record ChatSummaryDto(
         UUID id,
         UUID rentalId,
-        String rentalTitle,
         UUID supplierId,
         String supplierName,
         UUID tenantId,
         String tenantName,
         Instant createdAt,
-        Instant updatedAt,
-        List<ChatMessageDto> recentMessages,
         ChatMessageDto lastMessage
 ) {}

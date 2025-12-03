@@ -1,6 +1,9 @@
 package org.dev.powermarket.domain;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
@@ -8,8 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "chats")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Chat {
 
     @Id
@@ -22,26 +30,27 @@ public class Chat {
     private Rental rental;
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @OrderBy("createdAt DESC")
     private List<ChatMessage> messages = new ArrayList<>();
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private Instant createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        createdAt = Instant.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
-    // Getters and setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    @Column(name = "has_unread", nullable = false)
+    @Builder.Default
+    private boolean hasUnread = false;
 
-    public Rental getRental() { return rental; }
-    public void setRental(Rental rental) { this.rental = rental; }
+    @Column(name = "last_sender_id")
+    private UUID lastSenderId;
 
-    public List<ChatMessage> getMessages() { return messages; }
-    public void setMessages(List<ChatMessage> messages) { this.messages = messages; }
+    @Column(name = "last_message_preview", length = 100)
+    private String lastMessagePreview;
 
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
 }

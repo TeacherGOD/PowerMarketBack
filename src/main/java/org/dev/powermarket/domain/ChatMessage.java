@@ -1,14 +1,20 @@
 package org.dev.powermarket.domain;
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.dev.powermarket.security.entity.User;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "chat_messages")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChatMessage {
 
     @Id
@@ -27,33 +33,40 @@ public class ChatMessage {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "is_read", nullable = false)
-    private Boolean isRead = false;
+    @Column(name = "read_at")
+    private Instant readAt;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "is_edited", nullable = false)
+    @Builder.Default
+    private boolean isEdited = false;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "edited_at")
+    private Instant editedAt;
+
+    @Column(name = "deleted_for_everyone", nullable = false)
+    @Builder.Default
+    private boolean deletedForEveryone = false;
+
+    @Column(name = "deleted_for_sender", nullable = false)
+    @Builder.Default
+    private boolean deletedForSender = false;
+
     @PrePersist
-    public void prePersist() {
-        createdAt = Instant.now();
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
-    // Getters and setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    @PreUpdate
+    protected void onUpdate() {
+        // При редактировании сообщения
+        if (this.isEdited && this.editedAt == null) {
+            this.editedAt = Instant.now();
+        }
+    }
 
-    public Chat getChat() { return chat; }
-    public void setChat(Chat chat) { this.chat = chat; }
-
-    public User getSender() { return sender; }
-    public void setSender(User sender) { this.sender = sender; }
-
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-
-    public Boolean getIsRead() { return isRead; }
-    public void setIsRead(Boolean isRead) { this.isRead = isRead; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
