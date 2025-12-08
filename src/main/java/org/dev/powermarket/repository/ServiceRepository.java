@@ -1,6 +1,5 @@
 package org.dev.powermarket.repository;
 
-import jakarta.validation.constraints.NotNull;
 import org.dev.powermarket.domain.Service;
 import org.dev.powermarket.security.entity.User;
 import org.dev.powermarket.domain.enums.ServiceCategory;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -30,18 +28,9 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
             "(LOWER(s.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(s.description) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Service> searchServices(@Param("search") String search, Pageable pageable);
-    
-    List<Service> findBySupplierAndIsActiveTrueAndDeletedFalse(User supplier);
+
 
     List<Service> findByIdInAndIsActiveTrueAndDeletedFalse(List<UUID> ids);
-
-    // Поиск сервисов с минимальной мощностью
-    @Query("SELECT s FROM Service s WHERE " +
-            "s.isActive = true AND s.deleted = false AND " +
-            "(:minCapacity IS NULL OR s.maxCapacity >= :minCapacity)")
-    Page<Service> findByMinCapacity(
-            @Param("minCapacity") BigDecimal minCapacity,
-            Pageable pageable);
 
 
 
@@ -79,4 +68,6 @@ public interface ServiceRepository extends JpaRepository<Service, UUID> {
             @Param("availableFrom") LocalDate availableFrom,
             @Param("availableTo") LocalDate availableTo,
             Pageable pageable);
+
+    Page<Service> findByDeletedFalse(Pageable pageable);
 }

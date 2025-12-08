@@ -11,18 +11,16 @@ import org.dev.powermarket.repository.ServiceRepository;
 import org.dev.powermarket.integration.search.MlSearchClient;
 import org.dev.powermarket.integration.search.MlSearchProperties;
 
-import java.util.Comparator;
+import java.util.*;
 import java.time.LocalDate;
 
 import org.dev.powermarket.security.repository.AuthorizedUserRepository;
 import org.dev.powermarket.service.dto.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
@@ -105,17 +103,16 @@ public class ServiceService {
             if (!ids.isEmpty()) {
                 var list = serviceRepository.findByIdInAndIsActiveTrueAndDeletedFalse(ids);
                 // Preserve ML order
-                var order = new java.util.HashMap<java.util.UUID, Integer>();
+                Map<UUID, Integer> order = new HashMap<>();
                 for (int i = 0; i < ids.size(); i++) order.put(ids.get(i), i);
                 var sorted = list.stream()
                         .sorted(Comparator.comparingInt(s -> order.getOrDefault(s.getId(), Integer.MAX_VALUE)))
                         .map(this::toDto)
                         .toList();
                 // Create Page
-                return new org.springframework.data.domain.PageImpl<>(sorted, pageable, sorted.size());
+                return new PageImpl<>(sorted, pageable, sorted.size());
             }
         }
-
 
         Page<Service> services;
 
@@ -138,13 +135,12 @@ public class ServiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<ServiceDto> getMyServices(String email) {
+    public Page<ServiceDto> getMyServices(String email, Pageable pageable) {
         User supplier = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return serviceRepository.findBySupplierAndIsActiveTrueAndDeletedFalse(supplier).stream()
-                .map(this::toDto)
-                .toList();
+        return serviceRepository.findBySupplierAndDeletedFalse(supplier, pageable)
+                .map(this::toDto);
     }
 
     @Transactional
@@ -186,9 +182,9 @@ public class ServiceService {
         return dto;
     }
 
-    public List<ServiceDto> getAllServices() {
-        return serviceRepository.findAll().stream()
-                .map(this::toDto)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<ServiceDto> getAllServices(Pageable pageable) {
+        return serviceRepository.findByDeletedFalse(pageable)
+                .map(this::toDto);
     }
 }
