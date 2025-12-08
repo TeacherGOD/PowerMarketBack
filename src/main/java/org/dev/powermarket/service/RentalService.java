@@ -178,7 +178,7 @@ public class RentalService {
         rentalRequestRepository.save(request);
         rentalRepository.save(rental);
 
-        capacityManagementService.releaseCapacity(rental);
+        //capacityManagementService.releaseCapacity(rental);
 
         // Notify both parties
         createNotification(
