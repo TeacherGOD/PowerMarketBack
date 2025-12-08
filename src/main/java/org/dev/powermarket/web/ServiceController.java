@@ -10,7 +10,7 @@ import org.dev.powermarket.service.ServiceService;
 import org.dev.powermarket.service.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -61,8 +60,11 @@ public class ServiceController {
             @RequestParam(required = false) ServiceCategory category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            Pageable pageable) {
-        return ResponseEntity.ok(serviceService.searchServices(keyword, category, startDate, endDate, pageable));
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return ResponseEntity.ok(serviceService.searchServices(keyword, category, startDate, endDate, pageRequest));
     }
 
     @GetMapping("/{serviceId}")
@@ -71,7 +73,11 @@ public class ServiceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ServiceDto>> getMyServices(@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<Page<ServiceDto>> getMyServices(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+
         String role = principal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .findFirst()
@@ -79,12 +85,15 @@ public class ServiceController {
                 .toUpperCase();
         log.info(role);
 
+        PageRequest pageRequest = PageRequest.of(page, size);
+
         if (role.contains("SUPPLIER")) {
-            return ResponseEntity.ok(serviceService.getMyServices(principal.getUsername()));
-        }  else {
-            return ResponseEntity.ok(serviceService.getAllServices());
+            return ResponseEntity.ok(serviceService.getMyServices(principal.getUsername(), pageRequest));
+        } else {
+            return ResponseEntity.ok(serviceService.getAllServices(pageRequest));
         }
     }
+
 
     @DeleteMapping("/{serviceId}")
     public ResponseEntity<Void> deleteService(
