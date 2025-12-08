@@ -100,7 +100,7 @@ public class ServiceController {
             @AuthenticationPrincipal UserDetails principal,
             @PathVariable UUID serviceId) {
         serviceService.deleteService(principal.getUsername(), serviceId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/search/category-capacity")
